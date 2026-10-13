@@ -1,0 +1,143 @@
+
+const express = require("express");
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Omogućava čitanje JSON podataka iz zahteva
+app.use(express.json());
+
+// Privremena baza podataka u memoriji
+let items = [
+  {
+    id: 1,
+    name: "Crni novčanik",
+    description: "Izgubljen crni novčanik u parku",
+    status: "lost",
+  },
+  {
+    id: 2,
+    name: "Plavi ranac",
+    description: "Pronađen plavi ranac",
+    status: "found",
+  },
+];
+
+let nextId = 3;
+
+// Početna ruta
+app.get("/", (req, res) => {
+  res.json({
+    message: "Findly REST API radi!",
+    endpoints: [
+      "GET /api/items",
+      "GET /api/items/:id",
+      "POST /api/items",
+      "PUT /api/items/:id",
+      "DELETE /api/items/:id",
+    ],
+  });
+});
+
+// GET - Prikaz svih predmeta
+app.get("/api/items", (req, res) => {
+  res.json(items);
+});
+
+// GET - Prikaz jednog predmeta po ID-u
+app.get("/api/items/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const item = items.find((item) => item.id === id);
+
+  if (!item) {
+    return res.status(404).json({
+      error: "Predmet nije pronađen",
+    });
+  }
+
+  res.json(item);
+});
+
+// POST - Dodavanje novog predmeta
+app.post("/api/items", (req, res) => {
+  const { name, description, status } = req.body;
+
+  if (
+    typeof name !== "string" ||
+    !name.trim() ||
+    typeof description !== "string" ||
+    !description.trim() ||
+    !["lost", "found"].includes(status)
+  ) {
+    return res.status(400).json({
+      error: "Unesi name, description i status (lost ili found)",
+    });
+  }
+
+  const newItem = {
+    id: nextId++,
+    name: name.trim(),
+    description: description.trim(),
+    status,
+  };
+
+  items.push(newItem);
+
+  res.status(201).json(newItem);
+});
+
+// PUT - Izmena postojećeg predmeta
+app.put("/api/items/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const index = items.findIndex((item) => item.id === id);
+
+  if (index === -1) {
+    return res.status(404).json({
+      error: "Predmet nije pronađen",
+    });
+  }
+
+  const { name, description, status } = req.body;
+
+  if (
+    typeof name !== "string" ||
+    !name.trim() ||
+    typeof description !== "string" ||
+    !description.trim() ||
+    !["lost", "found"].includes(status)
+  ) {
+    return res.status(400).json({
+      error: "Unesi name, description i status (lost ili found)",
+    });
+  }
+
+  items[index] = {
+    id,
+    name: name.trim(),
+    description: description.trim(),
+    status,
+  };
+
+  res.json(items[index]);
+});
+
+// DELETE - Brisanje predmeta
+app.delete("/api/items/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const index = items.findIndex((item) => item.id === id);
+
+  if (index === -1) {
+    return res.status(404).json({
+      error: "Predmet nije pronađen",
+    });
+  }
+
+  items.splice(index, 1);
+
+  res.status(204).end();
+});
+
+// Pokretanje servera
+app.listen(PORT, () => {
+  console.log(`Findly API radi na http://localhost:${PORT}`);
+});
