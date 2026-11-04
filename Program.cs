@@ -1,7 +1,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Linq
 
 namespace projekat_find_it_found_it
 {
